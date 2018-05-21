@@ -28,7 +28,7 @@
 #ifndef DOUBLE_CONVERSION_DOUBLE_CONVERSION_H_
 #define DOUBLE_CONVERSION_DOUBLE_CONVERSION_H_
 
-#include "utils.h"
+#include <double-conversion/utils.h>
 
 namespace double_conversion {
 
@@ -294,12 +294,17 @@ class DoubleToStringConverter {
   // should be at least kBase10MaximalLength + 1 characters long.
   static const int kBase10MaximalLength = 17;
 
-  // Converts the given double 'v' to ascii. 'v' must not be NaN, +Infinity, or
-  // -Infinity. In SHORTEST_SINGLE-mode this restriction also applies to 'v'
-  // after it has been casted to a single-precision float. That is, in this
-  // mode static_cast<float>(v) must not be NaN, +Infinity or -Infinity.
+  // Converts the given double 'v' to digit characters. 'v' must not be NaN,
+  // +Infinity, or -Infinity. In SHORTEST_SINGLE-mode this restriction also
+  // applies to 'v' after it has been casted to a single-precision float. That
+  // is, in this mode static_cast<float>(v) must not be NaN, +Infinity or
+  // -Infinity.
   //
   // The result should be interpreted as buffer * 10^(point-length).
+  //
+  // The digits are written to the buffer in the platform's charset, which is
+  // often UTF-8 (with ASCII-range digits) but may be another charset, such
+  // as EBCDIC.
   //
   // The output depends on the given mode:
   //  - SHORTEST: produce the least amount of digits for which the internal
@@ -374,7 +379,7 @@ class DoubleToStringConverter {
   const int max_leading_padding_zeroes_in_precision_mode_;
   const int max_trailing_padding_zeroes_in_precision_mode_;
 
-  DISALLOW_IMPLICIT_CONSTRUCTORS(DoubleToStringConverter);
+  DC_DISALLOW_IMPLICIT_CONSTRUCTORS(DoubleToStringConverter);
 };
 
 
@@ -389,7 +394,8 @@ class StringToDoubleConverter {
     ALLOW_TRAILING_JUNK = 4,
     ALLOW_LEADING_SPACES = 8,
     ALLOW_TRAILING_SPACES = 16,
-    ALLOW_SPACES_AFTER_SIGN = 32
+    ALLOW_SPACES_AFTER_SIGN = 32,
+    ALLOW_CASE_INSENSIBILITY = 64,
   };
 
   // Flags should be a bit-or combination of the possible Flags-enum.
@@ -421,6 +427,8 @@ class StringToDoubleConverter {
   //  - ALLOW_SPACES_AFTER_SIGN: ignore whitespace after the sign.
   //       Ex: StringToDouble("-   123.2") -> -123.2.
   //           StringToDouble("+   123.2") -> 123.2
+  //  - ALLOW_CASE_INSENSIBILITY: ignore case of characters for special values:
+  //      infinity and nan.
   //
   // empty_string_value is returned when an empty string is given as input.
   // If ALLOW_LEADING_SPACES or ALLOW_TRAILING_SPACES are set, then a string
@@ -535,7 +543,7 @@ class StringToDoubleConverter {
                       bool read_as_double,
                       int* processed_characters_count) const;
 
-  DISALLOW_IMPLICIT_CONSTRUCTORS(StringToDoubleConverter);
+  DC_DISALLOW_IMPLICIT_CONSTRUCTORS(StringToDoubleConverter);
 };
 
 }  // namespace double_conversion
